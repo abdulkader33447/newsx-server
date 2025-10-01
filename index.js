@@ -26,6 +26,7 @@ async function run() {
     // collection
     const db = client.db("newsxDB");
     const userCollection = db.collection("users");
+    const blogsCollection = db.collection("blogs");
 
     // const newsCollection = client.db("newsxDB").collection("news");
 
@@ -49,18 +50,14 @@ async function run() {
       }
     });
 
-    // GET single user by name
-    app.get("/user/:name", async (req, res) => {
+    // GET only admin user
+    app.get("/admin/:email", async (req, res) => {
       try {
-        const name = req.params.name;
+        const email = req.params.email;
+        const admin = await userCollection.findOne({ email, name: "admin" });
 
-        if (name !== "admin") {
-          return res.status(400).send({ message: "This is not admin" });
-        }
-
-        const admin = await userCollection.findOne({ name });
         if (!admin) {
-          return res.status(404).send({ message: "Admin not found" });
+          return res.status(200).send({}); // empty object return
         }
 
         res.send(admin);
@@ -70,6 +67,28 @@ async function run() {
       }
     });
 
+    // blog post api
+    app.post("/blogs", async (req, res) => {
+      try {
+        const blog = req.body;
+
+        if (
+          !blog.title ||
+          !blog.categories ||
+          !blog.author ||
+          !blog.summary ||
+          !blog.content
+        ) {
+          return res.status(400).send({ message: "Missing required fields" });
+        }
+
+        const result = await blogsCollection.insertOne(blog);
+        res.status(201).send(result)
+      } catch (error) {
+        console.log("Error posting blog",error);
+        res.status(500).send({message:"Internal server error"})
+      }
+    });
     // Example route
     app.get("/news", async (req, res) => {
       const news = await newsCollection.find().toArray();
