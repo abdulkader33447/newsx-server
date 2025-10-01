@@ -83,16 +83,56 @@ async function run() {
         }
 
         const result = await blogsCollection.insertOne(blog);
-        res.status(201).send(result)
+        res.status(201).send(result);
       } catch (error) {
-        console.log("Error posting blog",error);
-        res.status(500).send({message:"Internal server error"})
+        console.log("Error posting blog", error);
+        res.status(500).send({ message: "Internal server error" });
       }
     });
-    // Example route
-    app.get("/news", async (req, res) => {
-      const news = await newsCollection.find().toArray();
-      res.send(news);
+
+    // get blogs
+    // get blogs
+    app.get("/resources", async (req, res) => {
+      try {
+        // Query params theke page number nao, default 1
+        const page = parseInt(req.query.page) || 1;
+        const limit = 8;
+        const skip = (page - 1) * limit;
+
+        // Total blogs count
+        const totalBlogs = await blogsCollection.countDocuments();
+
+        // Paginated blogs
+        const blogs = await blogsCollection
+          .find({})
+          .project({
+            imageUrl: 1,
+            categories: 1,
+            title: 1,
+            summary: 1,
+            author: 1,
+            publish_date: 1,
+            _id: 1,
+          })
+          .skip(skip)
+          .limit(limit)
+          .toArray();
+
+        res.status(200).send({
+          message: "Blogs retrieved successfully",
+          currentPage: page,
+          totalPages: Math.ceil(totalBlogs / limit),
+          totalBlogs: totalBlogs,
+          blogsPerPage: limit,
+          data: blogs,
+        });
+      } catch (error) {
+        console.error("Error fetching blogs:", error);
+        res.status(500).send({
+          message: "Internal server error",
+          error: error.message,
+        });
+      }
     });
 
     // Test connection
