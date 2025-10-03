@@ -91,7 +91,6 @@ async function run() {
     });
 
     // get blogs
-    // get blogs
     app.get("/resources", async (req, res) => {
       try {
         // Query params theke page number nao, default 1
@@ -132,6 +131,32 @@ async function run() {
           message: "Internal server error",
           error: error.message,
         });
+      }
+    });
+
+    // Get recent 9 blogs (resent blog page)
+    app.get("/blogs/recent", async (req, res) => {
+      try {
+        const recentBlogs = await blogsCollection
+          .find({})
+          .sort({ publish_date: -1 }) // last inserted first
+          .limit(9) // only 9 blogs
+          .toArray();
+
+        if (!recentBlogs || recentBlogs.length === 0) {
+          return res.status(404).send({ message: "No blogs found" });
+        }
+
+        res.status(200).send({
+          message: "Recent 9 blogs retrieved successfully",
+          total: recentBlogs.length,
+          data: recentBlogs,
+        });
+      } catch (error) {
+        console.error("Error fetching recent blogs:", error);
+        res
+          .status(500)
+          .send({ message: "Internal server error", error: error.message });
       }
     });
 
