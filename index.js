@@ -200,6 +200,32 @@ async function run() {
       }
     });
 
+    // get all blogs (for dashboard)
+    app.get("/blogs", async (req, res) => {
+      try {
+        const blogs = await blogsCollection
+          .find({})
+          .project({
+            title: 1,
+            status: 1, // Draft / Published / Scheduled
+            views: 1,
+            publish_date: 1,
+            author: 1,
+          })
+          .sort({ publish_date: -1 })
+          .toArray();
+
+        res.status(200).send({
+          message: "All blogs retrieved successfully",
+          total: blogs.length,
+          data: blogs,
+        });
+      } catch (error) {
+        console.error("Error fetching blogs:", error);
+        res.status(500).send({ message: "Internal server error" });
+      }
+    });
+
     // Test connection
     await client.db("admin").command({ ping: 1 });
     console.log("Connected to MongoDB Atlas");
