@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 const app = express();
@@ -134,13 +134,25 @@ async function run() {
       }
     });
 
-    // Get recent 9 blogs (resent blog page)
+    // Get recent 9 blogs (recent blogs page)
     app.get("/blogs/recent", async (req, res) => {
       try {
         const recentBlogs = await blogsCollection
-          .find({})
-          .sort({ publish_date: -1 }) // last inserted first
-          .limit(9) // only 9 blogs
+          .find(
+            {},
+            {
+              projection: {
+                imageUrl: 1,
+                categories: 1,
+                title: 1,
+                summary: 1,
+                author: 1,
+                publish_date: 1,
+              },
+            }
+          )
+          .sort({ publish_date: -1 }) // latest first
+          .limit(9)
           .toArray();
 
         if (!recentBlogs || recentBlogs.length === 0) {
@@ -154,6 +166,34 @@ async function run() {
         });
       } catch (error) {
         console.error("Error fetching recent blogs:", error);
+        res
+          .status(500)
+          .send({ message: "Internal server error", error: error.message });
+      }
+    });
+
+    // Get single blog by id
+    app.get("/blogs/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        // Validate ObjectId
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ message: "Invalid blog id" });
+        }
+
+        const blog = await blogsCollection.findOne({ _id: new ObjectId(id) });
+
+        if (!blog) {
+          return res.status(404).send({ message: "Blog not found" });
+        }
+
+        res.status(200).send({
+          message: "Blog retrieved successfully",
+          data: blog,
+        });
+      } catch (error) {
+        console.error("Error fetching blog details:", error);
         res
           .status(500)
           .send({ message: "Internal server error", error: error.message });
