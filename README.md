@@ -1,4 +1,4 @@
-Clone the repository: git clone [[your backend Repo URL](https://github.com/abdulkader33447/newsx-server)]
+Clone the repository: git clone [[server Repo URL](https://github.com/abdulkader33447/newsx-server)]
 
 Go to the project folder: cd [newsx-server]
 
