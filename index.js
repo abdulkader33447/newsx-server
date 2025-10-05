@@ -228,7 +228,7 @@ async function run() {
 
     // Test connection
     // await client.db("admin").command({ ping: 1 });
-    console.log("Connected to MongoDB Atlas");
+    // console.log("Connected to MongoDB Atlas");
   } catch (err) {
     console.error("MongoDB connection error:", err);
   }
